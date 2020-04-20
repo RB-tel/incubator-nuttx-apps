@@ -1199,11 +1199,6 @@ o set [{+|-}{e|x|xe|ex}] [<name> <value>]
     nsh> echo $foobar
     foovalue
 
-o sh <script-path>
-
-  Execute the sequence of NSH commands in the file referred
-  to by <script-path>.
-
 o shutdown [--reboot]
 
   Shutdown and power off the system or, optionally, reset and reboot the
@@ -1217,6 +1212,11 @@ o shutdown [--reboot]
 o sleep <sec>
 
   Pause execution (sleep) of <sec> seconds.
+
+o source <script-path>
+
+  Execute the sequence of NSH commands in the file referred
+  to by <script-path>.
 
 o telnetd
 
@@ -1448,7 +1448,7 @@ Command Dependencies on Configuration Settings
   cp         --
   dd         --
   delroute   CONFIG_NET && CONFIG_NET_ROUTE
-  df         !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_READABLE (see note 3)
+  df         !CONFIG_DISABLE_MOUNTPOINT
   dirname    --
   dmesg      CONFIG_RAMLOG_SYSLOG
   echo       --
@@ -1472,15 +1472,15 @@ Command Dependencies on Configuration Settings
   lsmod      CONFIG_MODULE && CONFIG_FS_PROCFS && !CONFIG_FS_PROCFS_EXCLUDE_MODULE
   md5        CONFIG_NETUTILS_CODECS && CONFIG_CODECS_HASH_MD5
   mb,mh,mw   ---
-  mkdir      (!CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE) || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS
+  mkdir      !CONFIG_DISABLE_MOUNTPOINT || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS
   mkfatfs    !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FSUTILS_MKFATFS
   mkfifo     CONFIG_PIPES && CONFIG_DEV_FIFO_SIZE > 0
-  mkrd       !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE (see note 4)
-  mount      !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_READABLE (see note 3)
-  mv         (!CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE) || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS  (see note 4)
+  mkrd       !CONFIG_DISABLE_MOUNTPOINT
+  mount      !CONFIG_DISABLE_MOUNTPOINT
+  mv         !CONFIG_DISABLE_MOUNTPOINT || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS 
   nfsmount   !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NET && CONFIG_NFS
   nslookup   CONFIG_LIBC_NETDB && CONFIG_NETDB_DNSCLIENT
-  password   !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE && CONFIG_NSH_LOGIN_PASSWD
+  password   !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NSH_LOGIN_PASSWD
   pmconfig   CONFIG_PM && !CONFIG_NSH_DISABLE_PMCONFIG
   poweroff   CONFIG_BOARDCTL_POWEROFF
   ps         CONFIG_FS_PROCFS && !CONFIG_FS_PROCFS_EXCLUDE_PROC
@@ -1488,28 +1488,28 @@ Command Dependencies on Configuration Settings
   pwd        !CONFIG_DISABLE_ENVIRON
   readlink   CONFIG_PSEUDOFS_SOFTLINK
   reboot     CONFIG_BOARDCTL_RESET
-  rm         (!CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE) || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS
-  rmdir      (!CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE) || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS
+  rm         !CONFIG_DISABLE_MOUNTPOINT || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS
+  rmdir      !CONFIG_DISABLE_MOUNTPOINT || !CONFIG_DISABLE_PSEUDOFS_OPERATIONS
   rmmod      CONFIG_MODULE
   route      CONFIG_FS_PROCFS && CONFIG_FS_PROCFS_EXCLUDE_NET &&
              !CONFIG_FS_PROCFS_EXCLUDE_ROUTE && CONFIG_NET_ROUTE &&
              !CONFIG_NSH_DISABLE_ROUTE && (CONFIG_NET_IPv4 || CONFIG_NET_IPv6)
   rptun      CONFIG_RPTUN
   set        CONFIG_NSH_VARS || !CONFIG_DISABLE_ENVIRON
-  sh         CONFIG_NFILE_STREAMS > 0 && !CONFIG_NSH_DISABLESCRIPT
   shutdown   CONFIG_BOARDCTL_POWEROFF || CONFIG_BOARDCTL_RESET
   sleep      --
+  source     CONFIG_NFILE_STREAMS > 0 && !CONFIG_NSH_DISABLESCRIPT
   test       !CONFIG_NSH_DISABLESCRIPT
   telnetd    CONFIG_NSH_TELNET && !CONFIG_NSH_DISABLE_TELNETD
   time       ---
   truncate   !CONFIG_DISABLE_MOUNTPOINT
-  umount     !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_READABLE
+  umount     !CONFIG_DISABLE_MOUNTPOINT
   uname      !CONFIG_NSH_DISABLE_UNAME
   unset      CONFIG_NSH_VARS || !CONFIG_DISABLE_ENVIRON
   urldecode  CONFIG_NETUTILS_CODECS && CONFIG_CODECS_URLCODE
   urlencode  CONFIG_NETUTILS_CODECS && CONFIG_CODECS_URLCODE
-  useradd    !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE && CONFIG_NSH_LOGIN_PASSWD
-  userdel    !CONFIG_DISABLE_MOUNTPOINT && CONFIG_FS_WRITABLE && CONFIG_NSH_LOGIN_PASSWD
+  useradd    !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NSH_LOGIN_PASSWD
+  userdel    !CONFIG_DISABLE_MOUNTPOINT && CONFIG_NSH_LOGIN_PASSWD
   usleep     --
   get        CONFIG_NET && CONFIG_NET_TCP
   xd         ---
@@ -1519,10 +1519,6 @@ Command Dependencies on Configuration Settings
      operations size may be larger.
   2. Special TFTP server start-up options will probably be required to permit
      creation of file for the correct operation of the put command.
-  3. CONFIG_FS_READABLE is not a user configuration but is set automatically
-     if any readable file system is selected.
-  4. CONFIG_FS_WRITABLE is not a user configuration but is set automatically
-     if any writable file system is selected.
 
 In addition, each NSH command can be individually disabled via one of the following
 settings.  All of these settings make the configuration of NSH potentially complex but
@@ -1545,8 +1541,8 @@ also allow it to squeeze into very small memory footprints.
   CONFIG_NSH_DISABLE_POWEROFF,  CONFIG_NSH_DISABLE_PS,        CONFIG_NSH_DISABLE_PUT,
   CONFIG_NSH_DISABLE_PWD,       CONFIG_NSH_DISABLE_READLINK,  CONFIG_NSH_DISABLE_REBOOT,
   CONFIG_NSH_DISABLE_RM,        CONFIG_NSH_DISABLE_RPTUN,     CONFIG_NSH_DISABLE_RMDIR,
-  CONFIG_NSH_DISABLE_ROUTE,     CONFIG_NSH_DISABLE_SET,       CONFIG_NSH_DISABLE_SH,
-  CONFIG_NSH_DISABLE_SHUTDOWN,  CONFIG_NSH_DISABLE_SLEEP,     CONFIG_NSH_DISABLE_TEST,
+  CONFIG_NSH_DISABLE_ROUTE,     CONFIG_NSH_DISABLE_SET,       CONFIG_NSH_DISABLE_SHUTDOWN,
+  CONFIG_NSH_DISABLE_SLEEP,     CONFIG_NSH_DISABLE_SOURCE,    CONFIG_NSH_DISABLE_TEST,
   CONFIG_NSH_DIABLE_TIME,       CONFIG_NSH_DISABLE_TRUNCATE,  CONFIG_NSH_DISABLE_UMOUNT,
   CONFIG_NSH_DISABLE_UNSET,     CONFIG_NSH_DISABLE_URLDECODE, CONFIG_NSH_DISABLE_URLENCODE,
   CONFIG_NSH_DISABLE_USERADD,   CONFIG_NSH_DISABLE_USERDEL,   CONFIG_NSH_DISABLE_USLEEP,

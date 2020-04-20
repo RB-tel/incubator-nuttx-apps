@@ -41,28 +41,28 @@ LVGL_DIR = .
 
 # LVGL Libraries
 
--include ./lvgl/lv_core/lv_core.mk
--include ./lvgl/lv_hal/lv_hal.mk
--include ./lvgl/lv_objx/lv_objx.mk
--include ./lvgl/lv_fonts/lv_fonts.mk
--include ./lvgl/lv_misc/lv_misc.mk
--include ./lvgl/lv_themes/lv_themes.mk
--include ./lvgl/lv_draw/lv_draw.mk
+-include ./lvgl/src/lv_core/lv_core.mk
+-include ./lvgl/src/lv_hal/lv_hal.mk
+-include ./lvgl/src/lv_objx/lv_objx.mk
+-include ./lvgl/src/lv_font/lv_font.mk
+-include ./lvgl/src/lv_misc/lv_misc.mk
+-include ./lvgl/src/lv_themes/lv_themes.mk
+-include ./lvgl/src/lv_draw/lv_draw.mk
 
 # Set up build configuration and environment
 
 WD := ${shell echo $(CURDIR) | sed -e 's/ /\\ /g'}
 
-CONFIG_GRAPH_LVGL_URL ?= "https://web.archive.org/web/20190204022948/https://littlevgl.com/download/"
+CONFIG_GRAPH_LVGL_URL ?= "https://github.com/littlevgl/lvgl/archive"
 
-LVGL_VERSION ?= v5_3
-LVGL_TARBALL = lvgl_$(LVGL_VERSION).zip
+LVGL_VERSION ?= 6.1.2
+LVGL_TARBALL = v$(LVGL_VERSION).zip
 WGET ?= wget
 
 LVGL_UNPACKNAME = lvgl
 UNPACK ?= unzip -o
 
-PATCH_FILES = lv_symbol_def.patch
+PATCH_FILES = lv_fix_warning.patch
 PATCH ?= patch -p0
 
 LVGL_UNPACKDIR =  $(WD)/$(LVGL_UNPACKNAME)
@@ -76,6 +76,7 @@ $(LVGL_TARBALL):
 $(LVGL_UNPACKNAME): $(LVGL_TARBALL)
 	@echo "Unpacking: $(LVGL_TARBALL) -> $(LVGL_UNPACKNAME)"
 	$(Q) $(UNPACK) $(LVGL_TARBALL)
+	$(Q) mv	lvgl-$(LVGL_VERSION) $(LVGL_UNPACKNAME)
 	$(Q) touch $(LVGL_UNPACKNAME)
 
 $(LVGL_UNPACKNAME)/.patched: $(LVGL_UNPACKNAME) $(PATCH_FILES)
@@ -84,7 +85,7 @@ $(LVGL_UNPACKNAME)/.patched: $(LVGL_UNPACKNAME) $(PATCH_FILES)
 
 lvgl/lvgl.h: $(LVGL_UNPACKNAME)
 
-$(APPDIR)/include/graphics/lvgl.h: $(LVGL_UNPACKNAME)/.patched lvgl/lvgl.h
+$(APPDIR)/include/graphics/lvgl.h: lvgl/lvgl.h $(LVGL_UNPACKNAME)/.patched
 	@echo "CP: lvgl/lvgl.h"
 	$(Q) cp lvgl/lvgl.h $(APPDIR)/include/graphics/lvgl.h
 

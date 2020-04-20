@@ -61,8 +61,10 @@
 
 /* Should we perform board-specific driver initialization?  There are two
  * ways that board initialization can occur:  1) automatically via
- * board_late_initialize() during bootup if CONFIG_BOARD_LATE_INITIALIZE, or 2)
- * via a call to boardctl() if the interface is enabled (CONFIG_LIB_BOARDCTL=y).
+ * board_late_initialize() during bootupif CONFIG_BOARD_LATE_INITIALIZE
+ * or 2).
+ * via a call to boardctl() if the interface is enabled
+ * (CONFIG_LIB_BOARDCTL=y).
  * If this task is running as an NSH built-in application, then that
  * initialization has probably already been performed otherwise we do it
  * here.
@@ -148,6 +150,9 @@ int main(int argc, FAR char *argv[])
   lv_disp_drv_t disp_drv;
   pthread_t tick_thread;
 
+  lv_disp_buf_t disp_buf;
+  static lv_color_t buf[CONFIG_LV_VDB_SIZE];
+
 #ifdef NEED_BOARDINIT
   /* Perform board-specific driver initialization */
 
@@ -170,8 +175,10 @@ int main(int argc, FAR char *argv[])
 
   /* Basic LittlevGL display driver initialization */
 
+  lv_disp_buf_init(&disp_buf, buf, NULL, LV_HOR_RES_MAX * 10);
   lv_disp_drv_init(&disp_drv);
-  disp_drv.disp_flush = fbdev_flush;
+  disp_drv.flush_cb = fbdev_flush;
+  disp_drv.buffer = &disp_buf;
   lv_disp_drv_register(&disp_drv);
 
   /* Tick interface initialization */
@@ -189,7 +196,7 @@ int main(int argc, FAR char *argv[])
    * mouse position and state.
    */
 
-  indev_drv.read = tp_read;
+  indev_drv.read_cb = tp_read;
   lv_indev_drv_register(&indev_drv);
 
   /* Demo initialization */
@@ -220,7 +227,7 @@ int main(int argc, FAR char *argv[])
 #  error "No theme selected for this application"
 #endif
 
- lv_test_theme_1(theme);
+  lv_test_theme_1(theme);
 
 #elif defined(CONFIG_EXAMPLES_LVGLDEMO_THEME_2)
   lv_test_theme_2();

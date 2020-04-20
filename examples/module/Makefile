@@ -39,7 +39,7 @@
 
 PROGNAME = module
 PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 2048
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
 MODULE = $(CONFIG_EXAMPLES_MODULE)
 
 # Module Example
@@ -55,10 +55,16 @@ ROOTDEPPATH += --dep-path drivers
 
 # Build targets
 
-context::
-	@$(MAKE) -C drivers TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
+module_main.c: build
+ifeq ($(CONFIG_BUILD_FLAT),y)
+drivers/mod_symtab.c: build
+endif
+
+.PHONY: build
+build:
+	+$(Q) $(MAKE) -C drivers TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 
 clean::
-	@$(MAKE) -C drivers TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
+	+$(Q) $(MAKE) -C drivers TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
 
 include $(APPDIR)/Application.mk

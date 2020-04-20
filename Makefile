@@ -61,17 +61,6 @@ all: $(BIN)
 .PHONY: import install dirlinks context context_serialize clean_context context_rest export .depdirs preconfig depend clean distclean
 .PRECIOUS: $(BIN)
 
-define MAKE_template
-	+$(Q) $(MAKE) -C $(1) $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
-
-endef
-
-define SDIR_template
-$(1)_$(2):
-	+$(Q) $(MAKE) -C $(1) $(2) TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
-
-endef
-
 $(foreach SDIR, $(CONFIGURED_APPS), $(eval $(call SDIR_template,$(SDIR),all)))
 $(foreach SDIR, $(CONFIGURED_APPS), $(eval $(call SDIR_template,$(SDIR),install)))
 $(foreach SDIR, $(CONFIGURED_APPS), $(eval $(call SDIR_template,$(SDIR),context)))
@@ -84,17 +73,12 @@ $(foreach SDIR, $(CLEANDIRS), $(eval $(call SDIR_template,$(SDIR),distclean)))
 
 ifeq ($(CONFIG_BUILD_KERNEL),y)
 
-.install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
-
-install: $(BINDIR) .install
-
-$(BINDIR):
-	$(Q) mkdir -p $(BINDIR)
+install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
 .import: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 	$(Q) $(MAKE) install TOPDIR="$(TOPDIR)"
 
-import: $(BINDIR)
+import:
 	$(Q) $(MAKE) .import TOPDIR="$(APPDIR)$(DELIM)import"
 
 else
@@ -110,7 +94,8 @@ else
 
 $(SYMTABSRC): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 	$(Q) $(MAKE) install TOPDIR="$(TOPDIR)"
-	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mksymtab.sh $(BINDIR) $(SYMTABSRC)
+	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mksymtab.sh $(BINDIR) $@.tmp
+	$(Q) $(call TESTANDREPLACEFILE, $@.tmp, $@)
 
 $(SYMTABOBJ): %$(OBJEXT): %.c
 	$(call COMPILE, -fno-lto $<, $@)
@@ -124,12 +109,7 @@ endif
 
 endif # !CONFIG_BUILD_LOADABLE
 
-.install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
-
-$(BINDIR):
-	$(Q) mkdir -p $(BINDIR)
-
-install: $(BINDIR) .install
+install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
 .import: $(BIN) install
 
@@ -167,13 +147,14 @@ endif
 
 .depdirs: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_depend)
 
-.depend: context Makefile .depdirs
+.depend: Makefile .depdirs
 	$(Q) touch $@
 
 depend: .depend
 
 clean_context:
 	$(Q) $(MAKE) -C platform clean_context TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
+	$(Q) $(MAKE) -C builtin/registry clean_context TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)"
 
 clean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_clean)
 	$(call DELFILE, $(SYMTABSRC))

@@ -74,7 +74,7 @@
 
 int system(FAR const char *cmd)
 {
-  FAR char *argv[2];
+  FAR char *argv[3];
   struct sched_param param;
   posix_spawnattr_t attr;
   pid_t pid;
@@ -105,15 +105,16 @@ int system(FAR const char *cmd)
       goto errout_with_attrs;
     }
 
-  errcode = task_spawnattr_setstacksize(&attr, CONFIG_SYSTEM_SYSTEM_STACKSIZE);
+  errcode = task_spawnattr_setstacksize(&attr,
+                                        CONFIG_SYSTEM_SYSTEM_STACKSIZE);
   if (errcode != 0)
     {
       goto errout_with_attrs;
     }
 
-   /* If robin robin scheduling is enabled, then set the scheduling policy
-    * of the new task to SCHED_RR before it has a chance to run.
-    */
+  /* If robin robin scheduling is enabled, then set the scheduling policy
+   * of the new task to SCHED_RR before it has a chance to run.
+   */
 
 #if CONFIG_RR_INTERVAL > 0
   errcode = posix_spawnattr_setschedpolicy(&attr, SCHED_RR);
@@ -141,14 +142,15 @@ int system(FAR const char *cmd)
 
   /* Spawn nsh_system() which will execute the command under the shell. */
 
-  argv[0] = (FAR char *)cmd;
-  argv[1] = NULL;
+  argv[0] = "-c";
+  argv[1] = (FAR char *)cmd;
+  argv[2] = NULL;
 
 #ifdef CONFIG_SYSTEM_SYSTEM_SHPATH
   errcode = posix_spawn(&pid, CONFIG_SYSTEM_SYSTEM_SHPATH,  NULL, &attr,
                         argv, (FAR char * const *)NULL);
 #else
-  errcode = task_spawn(&pid, "popen", nsh_system, NULL, &attr,
+  errcode = task_spawn(&pid, "system", nsh_system, NULL, &attr,
                        argv, (FAR char * const *)NULL);
 #endif
 

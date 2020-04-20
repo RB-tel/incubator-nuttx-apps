@@ -42,7 +42,7 @@ MAINSRC = elf_main.c
 
 PROGNAME = elf
 PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 2048
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
 MODULE = $(CONFIG_EXAMPLES_ELF)
 
 ROOTDEPPATH := --dep-path tests
@@ -51,18 +51,14 @@ ROOTDEPPATH := --dep-path tests
 
 VPATH += :tests
 
-ifeq ($(CONFIG_EXAMPLES_ELF_ROMFS),y)
-  FSIMG_HDR = $(TESTS_DIR)/romfs.h
-else
-  FSIMG_HDR = $(TESTS_DIR)/cromfs.h
-endif
+elf_main.c: build
+tests/symtab.c: build
 
-elf_main.c: tests/symtab.c
-
-tests/symtab.c tests/dirlist.h $(FSIMG_HDR):
-	@$(MAKE) -C tests TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
+.PHONY: build
+build:
+	+$(Q) $(MAKE) -C tests TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV)
 
 clean::
-	@$(MAKE) -C tests TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
+	+$(Q) $(MAKE) -C tests TOPDIR="$(TOPDIR)" APPDIR="$(APPDIR)" CROSSDEV=$(CROSSDEV) clean
 
 include $(APPDIR)/Application.mk

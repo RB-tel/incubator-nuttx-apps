@@ -97,17 +97,16 @@ bool usrsocktest_test_failed = false;
 
 static void get_mallinfo(struct mallinfo *mem)
 {
-#ifdef CONFIG_CAN_PASS_STRUCTS
   *mem = mallinfo();
-#else
-  mallinfo(mem);
-#endif
 }
 
 static void print_mallinfo(const struct mallinfo *mem, const char *title)
 {
   if (title)
-    printf("%s:\n", title);
+    {
+      printf("%s:\n", title);
+    }
+
   printf("       %11s%11s%11s%11s\n", "total", "used", "free", "largest");
   printf("Mem:   %11d%11d%11d%11d\n",
          mem->arena, mem->uordblks, mem->fordblks, mem->mxordblk);
@@ -145,7 +144,7 @@ static void run_tests(FAR const char *name, void (CODE *test_fn)(void))
 }
 
 /****************************************************************************
- * Name: runAllTests
+ * Name: run_all_tests
  *
  * Description:
  *   Sequentially runs all included test groups
@@ -161,7 +160,7 @@ static void run_tests(FAR const char *name, void (CODE *test_fn)(void))
  *
  ****************************************************************************/
 
-static void runAllTests(void)
+static void run_all_tests(void)
 {
   RUN_TEST_GROUP(CharDev);
   RUN_TEST_GROUP(NoDaemon);
@@ -248,7 +247,8 @@ bool usrsocktest_assert_print_buf(FAR const char *func,
 
 int main(int argc, FAR char *argv[])
 {
-  struct mallinfo mem_before, mem_after;
+  struct mallinfo mem_before;
+  struct mallinfo mem_after;
 
   memset(&overall, 0, sizeof(overall));
 
@@ -258,7 +258,7 @@ int main(int argc, FAR char *argv[])
 
   get_mallinfo(&mem_before);
 
-  runAllTests();
+  run_all_tests();
 
   printf("Unit-test groups done... OK:%d, FAILED:%d, TOTAL:%d\n",
          overall.ok, overall.failed, overall.ok + overall.failed);
